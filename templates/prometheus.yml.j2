@@ -32,3 +32,15 @@ alerting:
 
 scrape_configs:
   {{ prometheus_scrape_configs | to_nice_yaml(indent=2) | indent(2,False) }}
+
+{% if prometheus_server_scrape_group is defined %}
+    relabel_configs:
+{% for hostgroup in prometheus_server_scrape_group %}
+{% for host in groups[''+ hostgroup.inventory_group] %}
+    - source_labels: [__address__]
+      target_label: instance
+      regex: {{ hostvars[host].ansible_host }}:.*$
+      replacement: {{ hostvars[host].inventory_hostname }}
+{% endfor %}
+{% endfor %}
+{% endif %}
